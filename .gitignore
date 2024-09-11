@@ -1,3 +1,5 @@
-/build/
+# Ignored files
 *.iml
-.idea/
+/build/
+/.gradle/
+/.idea/

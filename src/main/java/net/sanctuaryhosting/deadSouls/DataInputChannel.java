@@ -1,4 +1,4 @@
-package com.darkyen.minecraft;
+package net.sanctuaryhosting.deadSouls;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -8,15 +8,11 @@ import java.io.DataInput;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.UTFDataFormatException;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.Channel;
 import java.nio.channels.SeekableByteChannel;
 
-/**
- *
- */
 final class DataInputChannel implements DataInput, Channel {
 
     @NotNull
@@ -32,21 +28,6 @@ final class DataInputChannel implements DataInput, Channel {
 
     public DataInputChannel(@NotNull SeekableByteChannel chn) {
         this(chn, 4096);
-    }
-
-    public long position() throws IOException {
-        return chn.position() - buffer.limit() + buffer.position();
-    }
-
-    public void position(long newPosition) throws IOException {
-        final long currentBasePosition = chn.position();
-        final long positionRelativeToBuffer = newPosition - (currentBasePosition - buffer.limit());
-        if (positionRelativeToBuffer >= 0 && positionRelativeToBuffer < buffer.limit()) {
-            buffer.position((int) positionRelativeToBuffer);
-        } else {
-            buffer.limit(0);
-            chn.position(newPosition);
-        }
     }
 
     private void require(int bytes) throws IOException {
@@ -215,7 +196,8 @@ final class DataInputChannel implements DataInput, Channel {
 
         while (count < utfLen) {
             c = (int) byteArr[count] & 0xff;
-            if (c > 127) break;
+            if (c > 127)
+                break;
             count++;
             charArr[chararr_count++] = (char) c;
         }
@@ -240,34 +222,26 @@ final class DataInputChannel implements DataInput, Channel {
                     /* 110x xxxx   10xx xxxx*/
                     count += 2;
                     if (count > utfLen)
-                        throw new UTFDataFormatException(
-                                "malformed input: partial character at end");
+                        throw new UTFDataFormatException("malformed input: partial character at end");
                     char2 = byteArr[count - 1];
                     if ((char2 & 0xC0) != 0x80)
-                        throw new UTFDataFormatException(
-                                "malformed input around byte " + count);
-                    charArr[chararr_count++] = (char) (((c & 0x1F) << 6) |
-                            (char2 & 0x3F));
+                        throw new UTFDataFormatException("malformed input around byte " + count);
+                    charArr[chararr_count++] = (char) (((c & 0x1F) << 6) | (char2 & 0x3F));
                     break;
                 case 14:
                     /* 1110 xxxx  10xx xxxx  10xx xxxx */
                     count += 3;
                     if (count > utfLen)
-                        throw new UTFDataFormatException(
-                                "malformed input: partial character at end");
+                        throw new UTFDataFormatException("malformed input: partial character at end");
                     char2 = byteArr[count - 2];
                     char3 = byteArr[count - 1];
                     if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80))
-                        throw new UTFDataFormatException(
-                                "malformed input around byte " + (count - 1));
-                    charArr[chararr_count++] = (char) (((c & 0x0F) << 12) |
-                            ((char2 & 0x3F) << 6) |
-                            char3 & 0x3F);
+                        throw new UTFDataFormatException("malformed input around byte " + (count - 1));
+                    charArr[chararr_count++] = (char) (((c & 0x0F) << 12) | ((char2 & 0x3F) << 6) | char3 & 0x3F);
                     break;
                 default:
                     /* 10xx xxxx,  1111 xxxx */
-                    throw new UTFDataFormatException(
-                            "malformed input around byte " + count);
+                    throw new UTFDataFormatException("malformed input around byte " + count);
             }
         }
         // The number of chars produced may be less than utflen

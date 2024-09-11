@@ -1,4 +1,4 @@
-package com.darkyen.minecraft;
+package net.sanctuaryhosting.deadSouls;
 
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -14,14 +14,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-/**
- *
- */
 @SuppressWarnings("WeakerAccess")
 final class Util {
 
     public static boolean overlaps(int quadMin, int quadMax, int queryMin, int queryMax) {
-        return queryMin <= quadMax && queryMax >= quadMin;
+        return queryMin > quadMax || queryMax < quadMin;
     }
 
     @Nullable
@@ -88,6 +85,7 @@ final class Util {
     }
 
     private static final Pattern TIME_SANITIZER = Pattern.compile("[^a-zA-Z0-9]");
+
     public static long parseTimeMs(@Nullable String time, long defaultMs, @NotNull Logger log) {
         if (time == null) {
             return defaultMs;
@@ -101,18 +99,18 @@ final class Util {
             firstLetterIndex++;
         }
         if (firstLetterIndex >= sanitized.length()) {
-            log.log(Level.WARNING, "Time \""+time+"\" is missing an unit");
+            log.log(Level.WARNING, "Time \"" + time + "\" is missing an unit");
             return defaultMs;
         }
         if (firstLetterIndex == 0) {
-            log.log(Level.WARNING, "Time \""+time+"\" is missing an amount");
+            log.log(Level.WARNING, "Time \"" + time + "\" is missing an amount");
             return defaultMs;
         }
         final long amount;
         try {
             amount = Long.parseLong(sanitized.substring(0, firstLetterIndex));
         } catch (NumberFormatException e) {
-            log.log(Level.WARNING, "Time \""+time+"\" is invalid");
+            log.log(Level.WARNING, "Time \"" + time + "\" is invalid");
             return defaultMs;
         }
 
@@ -131,19 +129,11 @@ final class Util {
                 unit = TimeUnit.DAYS;
                 break;
             default:
-                log.log(Level.WARNING, "Time \""+time+"\" has invalid unit");
+                log.log(Level.WARNING, "Time \"" + time + "\" has invalid unit");
                 return defaultMs;
         }
 
         return unit.toMillis(amount);
-    }
-
-    @NotNull
-    public static String normalizeKey(@Nullable String sound) {
-        if (sound == null) {
-            return "";
-        }
-        return sound.replaceAll("[^_./:0-9A-Za-z-]+", "").toLowerCase();
     }
 
     @NotNull
@@ -153,13 +143,13 @@ final class Util {
         }
         final String colorHex = color.replaceAll("[^0-9A-Fa-f]+", "");
         if (colorHex.length() != 6) {
-            log.log(Level.WARNING, "Invalid color: '"+color+"' - must be hexadecimal number in RRGGBB format");
+            log.log(Level.WARNING, "Invalid color: '" + color + "' - must be hexadecimal number in RRGGBB format");
             return defaultColor;
         }
         try {
             return Color.fromRGB(Integer.parseInt(color, 16) & 0xFF_FF_FF);
         } catch (NumberFormatException nfe) {
-            log.log(Level.WARNING, "Invalid color: '"+color+"' - must be hexadecimal number in RRGGBB format");
+            log.log(Level.WARNING, "Invalid color: '" + color + "' - must be hexadecimal number in RRGGBB format");
             return defaultColor;
         }
     }
@@ -186,20 +176,23 @@ final class Util {
 
     static int getExpToLevel(int expLevel) {
         // From Spigot source
-        if (expLevel >= 30) return 112 + (expLevel - 30) * 9;
-        else if (expLevel >= 15) return 37 + (expLevel - 15) * 5;
-        else return 7 + expLevel * 2;
+        if (expLevel >= 30)
+            return 112 + (expLevel - 30) * 9;
+        else if (expLevel >= 15)
+            return 37 + (expLevel - 15) * 5;
+        else
+            return 7 + expLevel * 2;
     }
 
     static int getExperienceToReach(int level) {
         // From https://minecraft.gamepedia.com/Experience (16. 7. 2019, Minecraft 1.14.2)
         final int level2 = level * level;
         if (level <= 16) {
-            return level2 + 6*level;
+            return level2 + 6 * level;
         } else if (level <= 31) {
-            return level2 * 2 + level2/2 - 40*level - level/2 + 360;
+            return level2 * 2 + level2 / 2 - 40 * level - level / 2 + 360;
         } else {
-            return level2 * 4 + level2/2 - 162 * level - level/2 + 2220;
+            return level2 * 4 + level2 / 2 - 162 * level - level / 2 + 2220;
         }
     }
 

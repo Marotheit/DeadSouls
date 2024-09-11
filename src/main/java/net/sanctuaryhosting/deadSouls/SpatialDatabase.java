@@ -1,13 +1,9 @@
-package com.darkyen.minecraft;
+package net.sanctuaryhosting.deadSouls;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-
-import static com.darkyen.minecraft.Util.overlaps;
 
 /**
  * Implements a modified Quad-tree algorithm, which splits the world into Tiles,
@@ -86,7 +82,9 @@ final class SpatialDatabase<E extends SpatialDatabase.Entry> {
         bucket.insert(x, y, 1 << CHUNK_BUCKET_LEVEL, entry);
     }
 
-    /** @return true if removed, false if not found */
+    /**
+     * @return true if removed, false if not found
+     */
     public boolean remove(@NotNull E entry) {
         final int x = entry.x();
         final int y = entry.y();
@@ -114,7 +112,8 @@ final class SpatialDatabase<E extends SpatialDatabase.Entry> {
             while (bucketIndex < bucketCount) {
                 final ChunkBucket<E> bucket = buckets[bucketIndex];
                 final long bucketKey = bucket.bucketKey;
-                if (!(bucketKey <= maxKey)) break;
+                if (!(bucketKey <= maxKey))
+                    break;
 
                 final int bucketX = keyX(bucketKey) << CHUNK_BUCKET_LEVEL;
                 final int bucketY = keyY(bucketKey) << CHUNK_BUCKET_LEVEL;
@@ -125,33 +124,6 @@ final class SpatialDatabase<E extends SpatialDatabase.Entry> {
         }
     }
 
-    public void verify() {
-        final int bucketCount = this.bucketCount;
-        final ChunkBucket<E>[] buckets = this.buckets;
-        for (int i = 0; i < bucketCount; i++) {
-            final ChunkBucket<E> bucket = buckets[i];
-            final long bucketKey = bucket.bucketKey;
-            final int bucketMinX = keyX(bucketKey) << CHUNK_BUCKET_LEVEL;
-            final int bucketMaxX = bucketMinX + (1 << CHUNK_BUCKET_LEVEL) - 1;
-            final int bucketMinY = keyY(bucketKey) << CHUNK_BUCKET_LEVEL;
-            final int bucketMaxY = bucketMinY + (1 << CHUNK_BUCKET_LEVEL) - 1;
-
-            bucket.verify(bucketMinX, bucketMaxX, bucketMinY, bucketMaxY);
-        }
-    }
-
-    @NotNull
-    public List<E> toList() {
-        final ArrayList<E> result = new ArrayList<>();
-        final int bucketCount = this.bucketCount;
-        final ChunkBucket<E>[] buckets = this.buckets;
-        for (int i = 0; i < bucketCount; i++) {
-            buckets[i].toList(result);
-        }
-
-        return result;
-    }
-
     @SuppressWarnings("unchecked")
     private static class Quad<E extends SpatialDatabase.Entry> {
         Quad<E>[] quads;
@@ -160,7 +132,7 @@ final class SpatialDatabase<E extends SpatialDatabase.Entry> {
 
         private static int quadIndex(int x, int y, int levelSize) {
             final int quadBit = levelSize >>> 1;
-            return (((x & quadBit) == quadBit) ? 0b10 : 0b00) | (((y & quadBit) == quadBit) ? 0b1 : 0b0);
+            return (((x & quadBit) == quadBit) ? 0b10: 0b00) | (((y & quadBit) == quadBit) ? 0b1: 0b0);
         }
 
         final void split(int levelSize) {
@@ -171,7 +143,7 @@ final class SpatialDatabase<E extends SpatialDatabase.Entry> {
             this.entries = null;
             this.entriesCount = -1;
             for (int i = 0; i < entriesCount; i++) {
-                final E e = (E)entries[i];
+                final E e = (E) entries[i];
                 final int x = e.x();
                 final int y = e.y();
 
@@ -221,7 +193,7 @@ final class SpatialDatabase<E extends SpatialDatabase.Entry> {
                     return false;
                 }
                 int i = 0;
-                for (; i < entriesCount-1; i++) {
+                for (; i < entriesCount - 1; i++) {
                     if (entries[i].equals(entry)) {
                         entries[i] = entries[--this.entriesCount];
                         entries[this.entriesCount] = null;
@@ -250,7 +222,7 @@ final class SpatialDatabase<E extends SpatialDatabase.Entry> {
                 // This is a leaf
                 final int entriesCount = this.entriesCount;
                 for (int i = 0; i < entriesCount; i++) {
-                    final E entry = (E)entries[i];
+                    final E entry = (E) entries[i];
                     final int x = entry.x();
                     final int y = entry.y();
                     if (x >= xMin && x <= xMax && y >= yMin && y <= yMax) {
@@ -271,78 +243,10 @@ final class SpatialDatabase<E extends SpatialDatabase.Entry> {
                 final int subQuadMaxX = subQuadMinX + subQuadSize;
                 final int subQuadMinY = quadY + (i & 1) * subQuadSize;
                 final int subQuadMaxY = subQuadMinY + subQuadSize;
-                if (!overlaps(subQuadMinX, subQuadMaxX, xMin, xMax) || !overlaps(subQuadMinY, subQuadMaxY, yMin, yMax))
+                if (Util.overlaps(subQuadMinX, subQuadMaxX, xMin, xMax) || Util.overlaps(subQuadMinY, subQuadMaxY, yMin, yMax))
                     continue;
 
                 quad.query(xMin, xMax, yMin, yMax, subQuadMinX, subQuadMinY, subQuadSize, out);
-            }
-        }
-
-        final void toList(ArrayList<E> out) {
-            final Object[] entries = this.entries;
-            if (entries != null) {
-                // This is a leaf
-                final int entriesCount = this.entriesCount;
-                out.ensureCapacity(entriesCount);
-                for (int i = 0; i < entriesCount; i++) {
-                    out.add((E)entries[i]);
-                }
-            } else {
-                for (Quad<E> quad : quads) {
-                    if (quad == null) {
-                        continue;
-                    }
-                    quad.toList(out);
-                }
-            }
-        }
-
-        void verify(int minX, int maxX, int minY, int maxY) {
-            if (entries != null) {
-                // This is a leaf
-                final int entriesCount = this.entriesCount;
-                for (int i = 0; i < entriesCount; i++) {
-                    final E entry = (E) entries[i];
-                    assert entry.x() >= minX && entry.x() <= maxX;
-                    assert entry.y() >= minY && entry.y() <= maxY;
-                }
-            } else {
-                final int midX = (minX + maxX + 1) >> 1;
-                final int midY = (minY + maxY + 1) >> 1;
-
-                int notNull = 0;
-                for (int x = 0; x < 2; x++) {
-                    for (int y = 0; y < 2; y++) {
-                        final Quad<E> quad = quads[(x << 1) | y];
-                        if (quad == null) {
-                            continue;
-                        }
-
-                        notNull++;
-
-                        int newMinX, newMaxX;
-                        int newMinY, newMaxY;
-                        if (x == 0) {
-                            newMinX = minX;
-                            newMaxX = midX-1;
-                        } else {
-                            newMinX = midX;
-                            newMaxX = maxX;
-                        }
-                        if (y == 0) {
-                            newMinY = minY;
-                            newMaxY = midY-1;
-                        } else {
-                            newMinY = midY;
-                            newMaxY = maxY;
-                        }
-                        quad.verify(newMinX, newMaxX, newMinY, newMaxY);
-                    }
-                }
-
-                if (notNull == 0 || notNull > quads.length) {
-                    throw new AssertionError("Bad node");
-                }
             }
         }
     }
@@ -357,6 +261,7 @@ final class SpatialDatabase<E extends SpatialDatabase.Entry> {
 
     public interface Entry {
         int x();
+
         int y();
     }
 }

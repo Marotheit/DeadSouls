@@ -1,96 +1,216 @@
-# <number> = positive number made up from digits 0 to 9
-# <time> = <number> <unit>
-#        | "never"
-# <unit> = "s" (seconds)
-#        | "m" (minutes)
-#        | "h" (hours)
-#        | "d" (days)
+# ======================
+# == General Settings ==
+# ======================
 
+# The amount of time before the soul is automatically released and can be collected by other players.
+# Acceptable unit values include "s" for seconds, "m" for minutes, "h" for hours, "d" for days, or "never".
+# As an example, the soul will be automatically released after 20 minutes by setting this value to "20m".
+# Setting this value to "never" will never release the soul unless it is manually released by the player.
+soul-release-timer: 2h
 
-# <time> after which the soul can be collected by anyone
-soul-free-after: 1h
-# <time> after which the soul disappears
-soul-fades-after: never
+# The amount of time before the soul fades away from the world, taking all items and experience with it.
+# Acceptable unit values include "s" for seconds, "m" for minutes, "h" for hours, "d" for days, or "never".
+# As an example, the soul will automatically fade away after one week by setting this value to "7d".
+# Setting this value to "never" will never allow the soul to fade away until it is collected by a player.
+soul-fade-timer: never
 
-# How the souls behave in PvP. Possible values:
-#   normal: no change
-#   disabled: souls are not created in PvP, items and XP drops like in vanilla Minecraft
-#   free: created souls are immediately free and can be collected by anyone
-pvp-behavior: normal
-
-# Patterns for names or UUIDs of worlds in which soul creation is enabled.
-# The asterisk (*) character stands in for 0 or more arbitrary characters.
-# Case sensitive. Note that existing souls are still collectible, even if no more souls are created.
-# Example:  "*" - all worlds
-#           "0000-1111-2222-3333" - world with this UUID
-#           "surv*" - any world whose name begins with "surv", for example "survival", "surv", or "surv1"
-worlds: [ "*" ]
-
-# <percent> = <number> "%"
-# <xp-per-level> = <number>
-
-# <percent> of experience points retained by souls
-# OR <xp-per-level> to retain by soul. Vanilla behavior is 7 xp-per-level.
-# Soul will never retain more xp than the player has collected.
-retained-xp: 90%
-
-# Souls will not be placed directly where the player has died, but at the last
-# player's location which is considered safe (unless it is too far away).
-# For example, when player falls to their death, their soul will be placed at the ledge from which they fell.
-# Similarly for falling into lava.
+# Whether smart soul placement should be enabled.
+# When this option is enabled, the soul will not spawn exactly where the player died, but the last location they were considered safe (unless it would be too far away).
+# As an example, if a player died by falling into lava, the soul would be spawned at the location just before they entered the lava pool.
+# This makes retrieving the soul possible in some situations where retrieval would be difficult, if not impossible.
 smart-soul-placement: true
 
-# EXPERIMENTAL: These entities will drop their items and XP as an soul
-# instead of dropping them on the ground. Entries must match names of enum constants from
-# https://hub.spigotmc.org/javadocs/spigot/org/bukkit/entity/EntityType.html perfectly, even the letter case!
-animals-with-souls: []
+# The amount of experience that is saved within the soul upon death.
+# This value can be an integer or a percentage.
+# Integer values are per level. The Minecraft default is 7.
+# As an example, if this value is set to "10", and the player was level 8 when they died, they would receive 80 experience upon collecting the soul.
+# Percentage values are of the total experience.
+# As an example, if this value is set to "50%", and the player had 240 experience when they died, they would receive 120 experience upon collecting the soul.
+saved-experience: 7
 
-# Sound played when collecting XP from a soul
-sound-soul-collect-xp: entity.experience_orb.pickup
-# Sound played when collecting items from a soul
-sound-soul-collect-item: item.trident.return
-# Sound played when everything in the soul has been collected and the soul disappears
-sound-soul-depleted: entity.generic.extinguish_fire
-# Sound played by nearby souls to eligible players, to help them better find the soul
-sound-soul-calling: block.beacon.ambient
-# Volume with which the soul is calling. Values above 1 only affect distance.
-volume-soul-calling: 16
-# Sound played to dying players that drop a soul
-# NOTE FOR 1.13 USERS: This sound exists only since 1.14, suggested replacement is: block.beacon.power_select
-sound-soul-dropped: block.bell.resonate
+# How the soul will behave when the player dies at the hands of another player.
+# A "normal" value will result in no change; the soul will spawn and behave normally.
+# A "disabled" value will result in items and experience dropping as they would in vanilla Minecraft; No soul will be created at all, and the player will spawn with no items or experience.
+# A "released" value will result in the soul being released immediately; The soul can be collected immediately by other players.
+pvp-behavior: normal
 
-# Color: HTML-like color in RRGGBB format (without leading #).
-# Somewhat nice color picker is available here: https://www.colorcodehex.com/html-color-picker.html
-# For example:
-#   FF0000 - pure red
-#   00FF00 - pure green
-#   0000FF - pure blue
-#   71B05F - sickly green
-# Color of the soul when it holds items (default: pure white)
-color-soul-items: FFFFFF
-# Color of the soul when it holds XP (default: pure aqua/cyan)
-color-soul-xp: 00FFFF
-# Color of the soul when it disappears (default: pure yellow)
-color-soul-gone: FFFF00
+# The worlds in which souls can be spawned upon death.
+# Please note that changing this value will still allow already existing souls to be collected, but no more souls will be spawned.
+# World names and UUIDs are accepted. World names are Case-Sensitive!
+# The asterisk* symbol will act as a wildcard.
+# Examples:
+#   "*" would spawn souls in all worlds.
+#   "0123-1234-2345-3456" would only spawn souls in the world with the matching UUID.
+#   "World*" would spawn souls in any world whose name begins with "World", such as "World", "World8-4", "World_nether", etc.
+enabled-worlds: [ "*" ]
 
-# Text on a button to free the soul (Set to empty to disable this functionality)
-text-free-my-soul: "Free my soul"
-# Text displayed as a tooltip on button to free player's soul (Set to empty to disable the tooltip)
-text-free-my-soul-tooltip: "Allows other players to collect the soul immediately"
-
-# <time> How frequently should auto-save of the soul database occur (only if modified and not more frequently than once per second)
-# never      = saving happens only on server restart (not generally recommended, unless you are 100% sure that your server never crashes or when you don't care about item loss and duplication)
-# otherwise  = plugin will attempt to save periodically, after this time interval passes
-#              0s is recommended for servers with infrequent deaths
-#              1m or 5m might be sensible values for large servers
-# Note that the auto-save happens mostly on an off-thread, so it is unlikely to cause any lag,
-# unless the amount of souls you have is really enormous (multiple thousands).
-
-# How to pick this value: Unless you have performance problems when players die
-#  and you know that a lot of players die in a short bursts on your server, keep it at 0s.
-#  Otherwise, there are two things to consider:
-#   The value must be large enough, that multiple players frequently die within that time span.
-#     Example: On a hunger games server, 20 players die within first 5 minutes, then the rate slows down. 5m would be a reasonable auto-save period.
-#   The value must be as small as possible to prevent losing/duplicating items on server crash.
-#     Risk of item loss or duplication is inevitable on server crashes, even in vanilla, but auto-saving once per hour may be unwise.
+# The amount of time before each soul is automatically saved in the database.
+# Acceptable unit values include "s" for seconds, "m" for minutes, "h" for hours, "d" for days, or "never".
+# As an example, souls will be saved every 30 seconds by setting this value to "30s".
+# Setting this value to "never" will result in the server only saving souls to the database upon server restart, which is not recommended.
+# As a general note, souls are saved on an off-thread, so it is unlikely to cause lag unless you host a server with a _very_ large amount of players.
+# If souls are not saved in a timely manner, you may experience item loss, item duplication, or other unwanted behaviors.
+# It is recommended to leave this option set to "0s" unless you run into performance issues, and should rarely ever exceed more than a few minutes in almost any case.
 auto-save: 0s
+
+
+# ================================
+# == Sound and Display Settings ==
+# ================================
+
+# Sound values can be found here: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
+# Values should be the same as they are in Minecraft when using the `/playsound <sound> ambient @p` command.
+# Any sound can be muted by setting the value to `intentionally.empty`.
+# Be sure that the sounds you select are present in the version of Minecraft you are hosting.
+# If you are playing on the latest version, this should not be an issue.
+
+# The sound played when the player spawns a soul. This sound will be played upon death.
+soul-sound-spawned: block.beacon.power_select
+
+# The sound played when a player is near their soul. This can help the player locate the soul more easily.
+soul-sound-calling: block.beacon.ambient
+
+# The distance at which the calling sound is able to be heard.
+# Increasing this value will allow players to hear their soul from farther away.
+soul-sound-calling-distance: 16
+
+# The sound played when a player collects a soul with items.
+soul-sound-collected-item: item.trident.return
+
+# The sound played when a player collects a soul with experience.
+soul-sound-collected-experience: block.amethyst_cluster.break
+
+# The sound played when all items and experience have been collected and the soul fades away.
+soul-sound-fade: block.bell.resonate
+
+# Whether the (uncustomizable) modern particles should be used.
+# When this option is enabled, souls will be displayed using a combination of Trial Spawner and Soul Fire Flame particles.
+# While this behavior is uncustomizable, souls may appear more modern to some players.
+# If this behavior is disabled, DeadSouls will instead use Dust particles based on the colors defined below.
+soul-modern-particles: true
+
+# Soul color values accept RRGGBB hex color format.
+# As an example, the soul fading away color can be pure red by setting the "soul-color-fade" value to "FF0000".
+# A nice color picker can be found here: https://www.colorcodehex.com/html-color-picker.html
+# These values will have no effect if the 'soul-modern-particles' value is enabled.
+
+# The base color of the soul. This color will be present at all times when a soul is available.
+# The default color is white.
+soul-color: FFFFFF
+
+# The color added to the base soul color when items are held within.
+# The default color is dark aqua.
+soul-color-items: 00AAAA
+
+# The color added to the base soul color when experience is held within.
+# The default color is lilac.
+soul-color-experience: C593D6
+
+# The color of the soul when it fades away after all items and experience are collected.
+# The default color is dark gray.
+soul-color-fade: 555555
+
+# The amount of souls to show in the `/souls` list before utilizing a page break.
+soul-page-depth: 4
+
+# The amount of days before a soul is considered "Ancient" in the `/souls` list.
+# As an example, the soul will be considered ancient after one month by setting this value to "30".
+# This is option is purely cosmetic, but could be used in conjunction with the soul-release-timer or soul-fade-timer values for more immersion.
+soul-age-ancient: 14
+
+
+# =======================
+# == Language Settings ==
+# =======================
+
+# Text formatting utilizes MiniMessage. You can find a list of formatting tags here: https://docs.advntr.dev/minimessage/format.html
+# <soul-tags> are used as placeholders for different variables, such as the numbered souls list, the age of the soul, distance from the soul, etc.
+# Placeholders can be removed if you wish to not display them (such as the Y-Coordinate in coordinate messages).
+# You can test messages before implementing them here: https://webui.advntr.dev/
+
+language-no-permission: "<red>You do not have permission to perform this action."
+language-actionbar-soul-does-not-exist: "<red>That soul does not exist."
+language-actionbar-soul-unable-to-locate: "<red>That soul was unable to be located."
+
+# The message displayed when the player dies to inform them that their soul has spawned, saving their items and experience.
+language-soul-spawned: "<newline><yellow>The world has suspended your soul, allowing your items and experience to linger in the overworld.<newline>"
+
+# The message displayed after the soul spawned message when the player dies to inform them of the location of their soul.
+# The player must have the `deadsouls.souls.list.coordinates` permission to see this information.
+# <soul-x-coordinate>, <soul-y-coordinate>, and <soul-z-coordinate> are used as a placeholder for the X coordinate, Y coordinate, and Z coordinate, respectively.
+language-soul-spawned-coordinates: "<newline><newline><gray>☠ <yellow>Your soul can be located at <gray>X: <soul-x-coordinate> <yellow>/ <gray>Y: <soul-y-coordinate> <yellow>/ <gray>Z: <soul-z-coordinate><yellow>. <gray>☠<newline> "
+
+# The message displayed in the actionbar when a soul is depleted.
+language-actionbar-soul-claimed: "<yellow>You have regained your items and experience from the soul."
+
+# The message displayed in the actionbar when the player attempts to view the `/souls` list while having no souls.
+language-actionbar-soul-list-no-souls: "<yellow>You do not have any souls to claim."
+
+# The style applied to the header at the top of the `/souls` list.
+# <player-name> is used as a placeholder for the name of the player.
+language-soul-list-header: "<reset> <newline><yellow><-=-x----      <gray>☠ <gold><player-name>'s Souls <gray>☠      <yellow>----x-=-><newline><reset> "
+
+# The style of each numbered soul list in the `/souls` list.
+# <soul-number> is used as a placeholder for the number of the soul in the list.
+language-soul-list-number-style: "<yellow>Soul <gold>#<soul-number><yellow>: "
+
+# The style applied to the age of the soul in the `/souls` list.
+# <soul-age> is used as a placeholder for the age of the soul.
+language-soul-list-age-time-style: "<dark_aqua><soul-age>."
+
+language-soul-list-age-new: "New"
+language-soul-list-age-minutes-old: "minutes old"
+language-soul-list-age-hours-old: "hours old"
+language-soul-list-age-days-old: "days old"
+language-soul-list-age-ancient: "Ancient"
+
+# The style applied to the coordinates of the soul in the `/souls` list.
+# The player must have the `deadsouls.souls.list.coordinates` permission to see this information.
+# <soul-x-coordinate>, <soul-y-coordinate>, and <soul-z-coordinate> are used as a placeholder for the X coordinate, Y coordinate, and Z coordinate, respectively.
+language-soul-list-coordinates-style: " <dark_aqua>(<gray>X: <soul-x-coordinate> <dark_aqua>/ <gray>Y: <soul-y-coordinate> <dark_aqua>/ <gray>Z: <soul-z-coordinate><dark_aqua>)"
+
+# The style applied to the distance of the soul in the `/souls` list.
+# The player must have the `deadsouls.souls.list.distance` permission to see this information.
+# <soul-distance> is used as a placeholder for the distance away from the soul.
+language-soul-list-distance-style: " <dark_aqua>(<gray><soul-distance> blocks away.<dark_aqua>)"
+
+# The style of the release button in the `/souls` list.
+# The player must have the `deadsouls.souls.list.release` permission to see this button.
+# The button will automatically be hidden if the soul is older than the 'soul-release-timer' value, since the soul would already have been released.
+# The tooltip will be displayed when hovering over the release button.
+language-soul-list-release-button: "<dark_gray>» <underlined><green>Release your soul.</underlined>"
+language-soul-list-release-button-tooltip: "<dark_gray>» <gold>Left-Click <dark_purple>to release your soul."
+
+# The style of the teleport button in the `/souls` list.
+# The player must have the `deadsouls.souls.list.teleport` permission to see this button.
+# The tooltip will be displayed when hovering over the release button.
+language-soul-list-teleport-button: "<dark_gray>» <underlined><gold>Teleport to your soul.</underlined>"
+language-soul-list-teleport-button-tooltip: "<dark_gray>» <gold>Left-Click <dark_purple>to teleport to your soul."
+language-actionbar-soul-teleport-success: "<yellow>You have been teleported to your soul."
+
+# The spacer used to center the page navigator.
+# There is no way to perfectly center the text, this is a band-aid attempt at doing so.
+language-soul-list-page-spacer: "                    "
+
+# The style of the `/souls` list page indicator.
+# <soul-page-number> and <soul-page-total> are used as a placeholder for the page number and maximum page, respectively.
+# Tooltips will be displayed when hovering over the appropriate button.
+language-soul-list-page: "<yellow>Page <gold><soul-page-number> <yellow>of <gold><soul-page-total>"
+language-soul-list-page-previous-button: "<dark_gray>«"
+language-soul-list-page-previous-tooltip: "<dark_gray>» <gold>Left-Click <dark_purple>to view the previous page."
+language-soul-list-page-next-button: "<dark_gray>»"
+language-soul-list-page-next-tooltip: "<dark_gray>» <gold>Left-Click <dark_purple>to view the next page."
+
+# The style of the total souls display following the page indicator.
+# <soul-count> is used as a placeholder for the number of souls applicable to the player.
+language-soul-list-page-total: "<yellow>(<gold><soul-count> <yellow>Total Souls)"
+
+
+# ===========================
+# == Experimental Settings ==
+# ===========================
+
+# EXPERIMENTAL
+# These entities will spawn souls with their item and experience drops, instead of dropping those items on the ground.
+# Entity names must (perfectly, Case-Sensitive) match the names from the Spigot entity list, found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/entity/EntityType.html
+entities-soul-spawn: []

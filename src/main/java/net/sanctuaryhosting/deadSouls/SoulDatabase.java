@@ -1,7 +1,7 @@
-package com.darkyen.minecraft;
+package net.sanctuaryhosting.deadSouls;
 
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -32,16 +32,13 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.darkyen.minecraft.Serialization.ZERO_UUID;
-import static com.darkyen.minecraft.Serialization.deserializeObject;
-import static com.darkyen.minecraft.Serialization.deserializeUUID;
-import static com.darkyen.minecraft.Serialization.serializeObject;
-import static com.darkyen.minecraft.Serialization.serializeUUID;
-import static com.darkyen.minecraft.Util.saturatedAdd;
+import static net.sanctuaryhosting.deadSouls.Serialization.ZERO_UUID;
+import static net.sanctuaryhosting.deadSouls.Serialization.deserializeObject;
+import static net.sanctuaryhosting.deadSouls.Serialization.deserializeUUID;
+import static net.sanctuaryhosting.deadSouls.Serialization.serializeObject;
+import static net.sanctuaryhosting.deadSouls.Serialization.serializeUUID;
+import static net.sanctuaryhosting.deadSouls.Util.saturatedAdd;
 
-/**
- *
- */
 @SuppressWarnings("WeakerAccess") // For tests
 final class SoulDatabase {
 
@@ -61,25 +58,27 @@ final class SoulDatabase {
 
     private boolean dirty = false;
 
-	public SoulDatabase(@Nullable Plugin owner, @NotNull Path databaseFile) {
-		this.owner = owner;
-		this.databaseFile = databaseFile;
+    public SoulDatabase(@Nullable Plugin owner, @NotNull Path databaseFile) {
+        this.owner = owner;
+        this.databaseFile = databaseFile;
 
-		try {
-			for (Soul soul : load(databaseFile)) {
-			    soul.id = soulsById.size();
-				soulsById.add(soul);
-				souls.insert(soul);
-			}
-		} catch (Exception e) {
-			LOG.log(Level.SEVERE, "Failed to load soul database, souls will not be present", e);
-		}
-	}
+        try {
+            for (Soul soul : load(databaseFile)) {
+                soul.id = soulsById.size();
+                soulsById.add(soul);
+                souls.insert(soul);
+            }
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "The DeadSouls database failed to load. Souls will not be present on the server.", e);
+        }
+    }
 
-    /** NOTE: Synchronize on the collection before accessing */
+    /**
+     * NOTE: Synchronize on the collection before accessing
+     */
     @NotNull
     ArrayList<@Nullable Soul> getSoulsById() {
-	    return soulsById;
+        return soulsById;
     }
 
     ArrayList<@NotNull Soul> getSoulsByOwnerAndWorld(@Nullable UUID owner, @Nullable UUID world) {
@@ -90,8 +89,7 @@ final class SoulDatabase {
                 if (soul == null) {
                     continue;
                 }
-                if ((owner == null || owner.equals(soul.owner)) && (world == null || world
-                        .equals(soul.locationWorld))) {
+                if ((owner == null || owner.equals(soul.owner)) && (world == null || world.equals(soul.locationWorld))) {
                     result.add(soul);
                 }
             }
@@ -105,7 +103,7 @@ final class SoulDatabase {
         try (DataInputChannel in = new DataInputChannel(Files.newByteChannel(databaseFile, StandardOpenOption.READ))) {
             final int version = in.readInt();
             if (version > CURRENT_DB_VERSION || version < 0) {
-                throw new Serialization.Exception("Invalid database version, please upgrade the plugin");
+                throw new Serialization.Exception("Invalid database version. Please update DeadSouls to the latest version.");
             }
             int soulCount = 0;
             while (in.hasRemaining()) {
@@ -114,30 +112,10 @@ final class SoulDatabase {
                 soulCount++;
             }
 
-            LOG.log(Level.INFO, "Soul database loaded ("+soulCount+" souls, db version "+version+")");
-        } catch (NoSuchFileException ignored) {}
-        return result;
-    }
-
-    public void loadLegacy(@NotNull Path databaseFile) throws IOException, Serialization.Exception {
-        int soulCount = 0;
-        try (DataInputChannel in = new DataInputChannel(Files.newByteChannel(databaseFile, StandardOpenOption.READ))) {
-            while (in.hasRemaining()) {
-                final Soul soul = deserializeSoul(in, 0);
-                soul.id = soulsById.size();
-                soulsById.add(soul);
-                souls.insert(soul);
-                soulCount++;
-            }
+            LOG.log(Level.INFO, "Database v" + version + " loaded. " + soulCount + " soul(s) found.");
         } catch (NoSuchFileException ignored) {
-            return;
         }
-
-        // Loaded successfully, save and delete legacy
-        if (save()) {
-            Files.deleteIfExists(databaseFile);
-            LOG.log(Level.INFO, "Soul database migrated ("+soulCount+" souls)");
-        }
+        return result;
     }
 
     @NotNull
@@ -152,17 +130,15 @@ final class SoulDatabase {
         try {
             Files.createDirectories(databaseFile.getParent());
         } catch (IOException io) {
-            LOG.log(Level.WARNING, "Failed to create directories for soul database file, saving may fail", io);
+            LOG.log(Level.WARNING, "Failed to create a directory for the DeadSouls database file. The plugin will not function properly until this issues is resolved.", io);
         }
 
         synchronized (SAVE_LOCK) {
             Exception exception = null;
             for (int i = 0; i < 10; i++) {
-                final Path writeFile = databaseFile
-                        .resolveSibling(databaseFile.getFileName().toString() + "." + (System.nanoTime() & 0xFFFFFF));
+                final Path writeFile = databaseFile.resolveSibling(databaseFile.getFileName().toString() + "." + (System.nanoTime() & 0xFFFFFF));
                 int failedWrites = 0;
-                try (DataOutputChannel out = new DataOutputChannel(Files
-                        .newByteChannel(writeFile, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))) {
+                try (DataOutputChannel out = new DataOutputChannel(Files.newByteChannel(writeFile, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))) {
                     out.writeInt(CURRENT_DB_VERSION);
 
                     for (final Soul soul : soulsCopy) {
@@ -182,11 +158,11 @@ final class SoulDatabase {
                 Files.move(writeFile, databaseFile, StandardCopyOption.REPLACE_EXISTING);
 
                 if (failedWrites > 0) {
-                    LOG.log(Level.WARNING, failedWrites + " soul(s) failed to save");
+                    LOG.log(Level.WARNING, failedWrites + " soul(s) failed to save. Be sure the server has write permissions to the DeadSouls directory.");
                 }
                 return true;
             }
-            LOG.log(Level.SEVERE, "Failed to save souls", exception);
+            LOG.log(Level.SEVERE, "Failed to save soul(s).", exception);
         }
 
         return false;
@@ -196,7 +172,6 @@ final class SoulDatabase {
         final ArrayList<@Nullable Soul> soulsById = this.soulsById;
         int fadedSouls = 0;
         final long now = System.currentTimeMillis();
-        //noinspection SynchronizationOnLocalVariableOrMethodParameter
         synchronized (soulsById) {
             for (int i = 0; i < soulsById.size(); i++) {
                 final Soul soul = soulsById.get(i);
@@ -261,7 +236,7 @@ final class SoulDatabase {
                         success = true;
                     }
                 } catch (IOException e) {
-                    LOG.log(Level.WARNING, "Failed to save ItemStore asynchronously", e);
+                    LOG.log(Level.WARNING, "Failed to save ItemStore asynchronously.", e);
                 } finally {
                     if (!success) {
                         dirty = true;
@@ -269,13 +244,13 @@ final class SoulDatabase {
                 }
             });
         } else {
-            LOG.log(Level.INFO, "Saving synchronously");
+            LOG.log(Level.INFO, "Saving synchronously...");
             try {
                 if (save()) {
                     dirty = false;
                 }
             } catch (IOException e) {
-                LOG.log(Level.WARNING, "Failed to save ItemStore synchronously", e);
+                LOG.log(Level.WARNING, "Failed to save ItemStore synchronously.", e);
             }
         }
     }
@@ -297,12 +272,12 @@ final class SoulDatabase {
         final Soul soul = getSoulById(soulId);
 
         if (soul == null) {
-            sender.sendMessage(ChatColor.AQUA+"This soul does not need freeing");
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>This soul does not exist. It may have been claimed already."));
             return;
         }
 
         if (soul.owner == null) {
-            sender.sendMessage(ChatColor.AQUA+"This soul is already free");
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>This soul has already been released."));
             return;
         }
 
@@ -310,20 +285,20 @@ final class SoulDatabase {
             final boolean ownSoul = soul.isOwnedBy(sender);
             if (ownSoul) {
                 if (!canFreeOwn) {
-                    sender.sendMessage(ChatColor.AQUA + "You cannot free your own soul");
+                    sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>You are unable to release your own soul."));
                     return;
                 }
             } else {
-                sender.sendMessage(ChatColor.AQUA + "This soul is not yours to free");
+                sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>This soul does not belong to you."));
                 return;
             }
         }
 
         if (soul.freeSoul(System.currentTimeMillis(), soulFreeAfterMs)) {
-            sender.sendMessage(ChatColor.AQUA+"Soul has been set free");
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>This soul has been released."));
             dirty = true;
         } else {
-            sender.sendMessage(ChatColor.AQUA+"This soul is already free");
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>This soul has already been released."));
         }
     }
 
@@ -334,7 +309,7 @@ final class SoulDatabase {
         }
         synchronized (soulsById) {
             if (toRemove.id >= soulsById.size() || soulsById.get(toRemove.id) != toRemove) {
-                LOG.log(Level.WARNING, "Soul " + toRemove + " already removed from BY-ID");
+                LOG.log(Level.WARNING, "Soul " + toRemove + " has already been removed.");
             } else {
                 soulsById.set(toRemove.id, null);
                 dirty = true;
@@ -342,39 +317,54 @@ final class SoulDatabase {
         }
 
         if (!souls.remove(toRemove)) {
-            LOG.log(Level.WARNING, "Soul "+toRemove+" already removed from SOULS");
+            LOG.log(Level.WARNING, "Soul " + toRemove + " has already been removed.");
         }
     }
 
     public void findSouls(@NotNull UUID worldUID, int x, int z, int radius, @NotNull Collection<Soul> out) {
-        souls.query((x - radius) / SOUL_STORE_SCALE, (x + radius + SOUL_STORE_SCALE - 1) / SOUL_STORE_SCALE,
-                (z - radius) / SOUL_STORE_SCALE, (z + radius + SOUL_STORE_SCALE - 1) / SOUL_STORE_SCALE, out);
+        souls.query((x - radius) / SOUL_STORE_SCALE, (x + radius + SOUL_STORE_SCALE - 1) / SOUL_STORE_SCALE, (z - radius) / SOUL_STORE_SCALE, (z + radius + SOUL_STORE_SCALE - 1) / SOUL_STORE_SCALE, out);
         out.removeIf((soul) -> !worldUID.equals(soul.locationWorld));
     }
 
-    /** A soul in a database. The fields that are not final can be modified,
-     * but don't forget to {@link SoulDatabase#markDirty()} if you do to ensure that the changes are saved. */
+    /**
+     * A soul in a database. The fields that are not final can be modified,
+     * but don't forget to {@link SoulDatabase#markDirty()} if you do to ensure that the changes are saved.
+     */
     static final class Soul implements SpatialDatabase.Entry, DeadSoulsAPI.Soul {
 
-        /** Index at which this Soul is or was stored, if any.
-         * This is highly transient and does not serve as a way of identification. */
+        /**
+         * Index at which this Soul is or was stored, if any.
+         * This is highly transient and does not serve as a way of identification.
+         */
         transient int id = -1;
 
-        /** Current owner of the soul by {@link Player#getUniqueId()}. */
+        /**
+         * Current owner of the soul by {@link Player#getUniqueId()}.
+         */
         @Nullable
         UUID owner;
-        /** World in which the soul is by {@link World#getUID()}. */
+        /**
+         * World in which the soul is by {@link World#getUID()}.
+         */
         @NotNull
         final UUID locationWorld;
-        /** Precise location of the soul in the world. */
+        /**
+         * Precise location of the soul in the world.
+         */
         final double locationX, locationY, locationZ;
-        /** When was the soul created on clock of {@link System#currentTimeMillis()}. */
+        /**
+         * When was the soul created on clock of {@link System#currentTimeMillis()}.
+         */
         final long timestamp;
 
-        /** Can be changed when collected */
+        /**
+         * Can be changed when collected
+         */
         @NotNull
         ItemStack[] items;
-        /** Can be changed when collected */
+        /**
+         * Can be changed when collected
+         */
         int xp;
 
         Soul(@Nullable UUID owner, @NotNull UUID locationWorld, double x, double y, double z, long timestamp, @NotNull ItemStack[] items, int xp) {
@@ -390,9 +380,7 @@ final class SoulDatabase {
 
         boolean isOwnedBy(CommandSender commandSender) {
             final UUID owner = this.owner;
-            return owner != null
-                    && commandSender instanceof OfflinePlayer
-                    && owner.equals(((OfflinePlayer) commandSender).getUniqueId());
+            return owner != null && commandSender instanceof OfflinePlayer && owner.equals(((OfflinePlayer) commandSender).getUniqueId());
         }
 
         @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -410,7 +398,9 @@ final class SoulDatabase {
             return true;
         }
 
-        /** @return true if free, false if already freed */
+        /**
+         * @return true if free, false if already freed
+         */
         boolean freeSoul(long now, long soulFreeAfterMs) {
             if (this.owner == null) {
                 return false;
@@ -507,18 +497,27 @@ final class SoulDatabase {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
 
             Soul soul = (Soul) o;
 
-            if (Double.compare(soul.locationX, locationX) != 0) return false;
-            if (Double.compare(soul.locationY, locationY) != 0) return false;
-            if (Double.compare(soul.locationZ, locationZ) != 0) return false;
-            if (timestamp != soul.timestamp) return false;
-            if (xp != soul.xp) return false;
-            if (!Objects.equals(owner, soul.owner)) return false;
-            if (!locationWorld.equals(soul.locationWorld)) return false;
+            if (Double.compare(soul.locationX, locationX) != 0)
+                return false;
+            if (Double.compare(soul.locationY, locationY) != 0)
+                return false;
+            if (Double.compare(soul.locationZ, locationZ) != 0)
+                return false;
+            if (timestamp != soul.timestamp)
+                return false;
+            if (xp != soul.xp)
+                return false;
+            if (!Objects.equals(owner, soul.owner))
+                return false;
+            if (!locationWorld.equals(soul.locationWorld))
+                return false;
             // Probably incorrect - comparing Object[] arrays with Arrays.equals
             return Arrays.equals(items, soul.items);
         }
@@ -526,16 +525,12 @@ final class SoulDatabase {
         @Override
         public int hashCode() {
             int result;
-            long temp;
-            result = owner != null ? owner.hashCode() : 0;
+            result = owner != null ? owner.hashCode(): 0;
             result = 31 * result + locationWorld.hashCode();
-            temp = Double.doubleToLongBits(locationX);
-            result = 31 * result + (int) (temp ^ (temp >>> 32));
-            temp = Double.doubleToLongBits(locationY);
-            result = 31 * result + (int) (temp ^ (temp >>> 32));
-            temp = Double.doubleToLongBits(locationZ);
-            result = 31 * result + (int) (temp ^ (temp >>> 32));
-            result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
+            result = 31 * result + Double.hashCode(locationX);
+            result = 31 * result + Double.hashCode(locationY);
+            result = 31 * result + Double.hashCode(locationZ);
+            result = 31 * result + Long.hashCode(timestamp);
             result = 31 * result + Arrays.hashCode(items);
             result = 31 * result + xp;
             return result;
@@ -543,17 +538,7 @@ final class SoulDatabase {
 
         @Override
         public String toString() {
-            return "Soul{" +
-                    "id=" + id +
-                    ", owner=" + owner +
-                    ", locationWorld=" + locationWorld +
-                    ", locationX=" + locationX +
-                    ", locationY=" + locationY +
-                    ", locationZ=" + locationZ +
-                    ", timestamp=" + timestamp +
-                    ", items=" + Arrays.toString(items) +
-                    ", xp=" + xp +
-                    '}';
+            return "Soul{" + "id=" + id + ", owner=" + owner + ", locationWorld=" + locationWorld + ", locationX=" + locationX + ", locationY=" + locationY + ", locationZ=" + locationZ + ", timestamp=" + timestamp + ", items=" + Arrays.toString(items) + ", xp=" + xp + '}';
         }
     }
 
@@ -565,11 +550,7 @@ final class SoulDatabase {
             out.writeDouble(soul.locationY);
             out.writeDouble(soul.locationZ);
             final UUID owner = soul.owner;
-            if (owner == null) {
-                serializeUUID(ZERO_UUID, out);
-            } else {
-                serializeUUID(owner, out);
-            }
+            serializeUUID(Objects.requireNonNullElse(owner, ZERO_UUID), out);
             out.writeLong(soul.timestamp);
             out.writeInt(soul.xp);
 
@@ -586,7 +567,7 @@ final class SoulDatabase {
                         serializeObject(entry.getValue(), out);
                     }
                 } catch (Exception e) {
-                    LOG.log(Level.SEVERE, "Failed to serialize item: "+Util.safeToString(item), e);
+                    LOG.log(Level.SEVERE, "Failed to serialize item: " + Util.safeToString(item), e);
                     out.position(itemPosition);
                     out.truncate();
                     failed++;
@@ -600,7 +581,7 @@ final class SoulDatabase {
                 out.position(endPosition);
             }
         } catch (IOException io) {
-            LOG.log(Level.SEVERE, "Failed to serialize: "+ Arrays.toString(items), io);
+            LOG.log(Level.SEVERE, "Failed to serialize: " + Arrays.toString(items), io);
             return false;
         }
 
@@ -610,22 +591,22 @@ final class SoulDatabase {
     @NotNull
     static Soul deserializeSoul(@NotNull DataInput in, int version) throws IOException, Serialization.Exception {
         final UUID worldUUID = deserializeUUID(in);
-        final double locationX = version == 0 ? in.readInt() : in.readDouble();
-        final double locationY = version == 0 ? in.readInt() : in.readDouble();
-        final double locationZ = version == 0 ? in.readInt() : in.readDouble();
+        final double locationX = version == 0 ? in.readInt(): in.readDouble();
+        final double locationY = version == 0 ? in.readInt(): in.readDouble();
+        final double locationZ = version == 0 ? in.readInt(): in.readDouble();
         final UUID ownerUUID = deserializeUUID(in);
         final long timestamp = in.readLong();
         final int xp = in.readInt();
 
         final int itemAmount = in.readUnsignedShort();
         if (itemAmount > 100) {
-            LOG.log(Level.WARNING, "Suspiciously high amount of items in the soul: "+itemAmount);
+            LOG.log(Level.WARNING, "There is a suspiciously high amount of items in this soul: " + itemAmount);
         }
         final ItemStack[] items = new ItemStack[itemAmount];
         for (int i = 0; i < itemAmount; i++) {
             final int entries = in.readUnsignedShort();
             if (entries > 100) {
-                LOG.log(Level.WARNING, "Suspiciously high amount of entries in the soul: "+entries);
+                LOG.log(Level.WARNING, "There is a suspiciously high amount of entries in this soul: " + entries);
             }
             final HashMap<String, Object> itemMap = new HashMap<>(entries + entries / 2);
             for (int entryId = 0; entryId < entries; entryId++) {
@@ -636,12 +617,12 @@ final class SoulDatabase {
             try {
                 items[i] = ItemStack.deserialize(itemMap);
             } catch (Exception e) {
-                LOG.log(Level.WARNING, "Failed to deserialize item "+i+": "+itemMap);
+                LOG.log(Level.WARNING, "Failed to deserialize item " + i + ": " + itemMap);
                 items[i] = new ItemStack(Material.AIR);
             }
         }
 
-        final UUID owner = ownerUUID.equals(ZERO_UUID) ? null : ownerUUID;
+        final UUID owner = ownerUUID.equals(ZERO_UUID) ? null: ownerUUID;
         return new Soul(owner, worldUUID, locationX, locationY, locationZ, timestamp, items, xp);
     }
 }

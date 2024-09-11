@@ -1,4 +1,4 @@
-package com.darkyen.minecraft;
+package net.sanctuaryhosting.deadSouls;
 
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
@@ -17,9 +17,6 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- */
 @SuppressWarnings("rawtypes")
 final class Serialization {
 
@@ -29,7 +26,7 @@ final class Serialization {
         if (object == null) {
             out.writeByte(SerializedType.NULL.ordinal());
         } else if (object instanceof Boolean) {
-            if ((Boolean)object) {
+            if ((Boolean) object) {
                 out.writeByte(SerializedType.PRIMITIVE_BOOLEAN_TRUE.ordinal());
             } else {
                 out.writeByte(SerializedType.PRIMITIVE_BOOLEAN_FALSE.ordinal());
@@ -58,8 +55,7 @@ final class Serialization {
         } else if (object instanceof String) {
             out.writeByte(SerializedType.STRING.ordinal());
             out.writeUTF((String) object);
-        } else if (object instanceof List) {
-            final List list = (List) object;
+        } else if (object instanceof List list) {
             if (list.size() <= 0xFF) {
                 out.writeByte(SerializedType.LIST_BYTE.ordinal());
                 out.writeByte(list.size());
@@ -80,7 +76,7 @@ final class Serialization {
                 out.writeInt(map.size());
             }
             for (Map.Entry entry : map.entrySet()) {
-                out.writeUTF((String)entry.getKey());
+                out.writeUTF((String) entry.getKey());
                 serializeObject(entry.getValue(), out);
             }
         } else if (object instanceof ConfigurationSerializable) {
@@ -93,14 +89,14 @@ final class Serialization {
                 out.writeInt(serialized.size());
             }
             //noinspection unchecked
-            out.writeUTF(ConfigurationSerialization.getAlias((Class)object.getClass()));
+            out.writeUTF(ConfigurationSerialization.getAlias((Class) object.getClass()));
 
             for (Map.Entry entry : serialized.entrySet()) {
-                out.writeUTF((String)entry.getKey());
+                out.writeUTF((String) entry.getKey());
                 serializeObject(entry.getValue(), out);
             }
         } else {
-            throw new Exception("Can't serialize "+object+", unsupported type: "+object.getClass());
+            throw new Exception("Can't serialize " + object + ", unsupported type: " + object.getClass());
         }
     }
 
@@ -108,7 +104,7 @@ final class Serialization {
     public static Object deserializeObject(@NotNull DataInput in) throws IOException, Exception {
         final int typeByte = in.readUnsignedByte();
         if (typeByte > SerializedType.VALUES.length) {
-            throw new Exception("Unknown type: "+typeByte);
+            throw new Exception("Unknown type: " + typeByte);
         }
         final SerializedType type = SerializedType.VALUES[typeByte];
         switch (type) {
@@ -136,7 +132,7 @@ final class Serialization {
                 return in.readUTF();
             case LIST_BYTE:
             case LIST: {
-                final int length = type == SerializedType.LIST_BYTE ? in.readUnsignedByte() : in.readInt();
+                final int length = type == SerializedType.LIST_BYTE ? in.readUnsignedByte(): in.readInt();
                 if (length == 0)
                     return Collections.emptyList();
                 final ArrayList<Object> list = new ArrayList<>(length);
@@ -147,10 +143,10 @@ final class Serialization {
             }
             case MAP_BYTE:
             case MAP: {
-                final int length = type == SerializedType.MAP_BYTE ? in.readUnsignedByte() : in.readInt();
+                final int length = type == SerializedType.MAP_BYTE ? in.readUnsignedByte(): in.readInt();
                 if (length == 0)
                     return Collections.emptyMap();
-                final HashMap<String, Object> map = new HashMap<>(length + length/2);
+                final HashMap<String, Object> map = new HashMap<>(length + length / 2);
                 for (int i = 0; i < length; i++) {
                     final String key = in.readUTF();
                     final Object value = deserializeObject(in);
@@ -160,7 +156,7 @@ final class Serialization {
             }
             case CONFIGURATION_SERIALIZABLE_BYTE:
             case CONFIGURATION_SERIALIZABLE: {
-                final int size = type == SerializedType.CONFIGURATION_SERIALIZABLE_BYTE ? in.readUnsignedByte() : in.readInt();
+                final int size = type == SerializedType.CONFIGURATION_SERIALIZABLE_BYTE ? in.readUnsignedByte(): in.readInt();
                 final String alias = in.readUTF();
                 final HashMap<String, Object> map = new HashMap<>(size + size / 2);
                 for (int i = 0; i < size; i++) {
@@ -170,26 +166,24 @@ final class Serialization {
                 }
 
                 try {
-                    Class<? extends ConfigurationSerializable> serializedClass = ConfigurationSerialization
-                            .getClassByAlias(alias);
+                    Class<? extends ConfigurationSerializable> serializedClass = ConfigurationSerialization.getClassByAlias(alias);
                     if (serializedClass == null) {
                         //noinspection unchecked
                         serializedClass = (Class<? extends ConfigurationSerializable>) Class.forName(alias);
                     }
 
-                    final ConfigurationSerializable result = ConfigurationSerialization
-                            .deserializeObject(map, serializedClass);
+                    final ConfigurationSerializable result = ConfigurationSerialization.deserializeObject(map, serializedClass);
                     if (result == null) {
-                        LOG.log(Level.WARNING, "Failed to deserialize "+alias+": "+map);
+                        LOG.log(Level.WARNING, "Failed to deserialize " + alias + ": " + map);
                     }
                     return result;
                 } catch (java.lang.Exception e) {
-                    LOG.log(Level.WARNING, "Failed to deserialize "+alias+": "+map, e);
+                    LOG.log(Level.WARNING, "Failed to deserialize " + alias + ": " + map, e);
                     return null;
                 }
             }
             default:
-                LOG.log(Level.SEVERE, "deserializeObject: Branch for type "+type+" is missing!");
+                LOG.log(Level.SEVERE, "deserializeObject: Branch for type " + type + " is missing!");
                 return null;
         }
     }
@@ -213,26 +207,19 @@ final class Serialization {
     }
 
     enum SerializedType {
-        NULL,
-        PRIMITIVE_BOOLEAN_TRUE,
-        PRIMITIVE_BOOLEAN_FALSE,
-        PRIMITIVE_BYTE,
-        PRIMITIVE_CHARACTER,
-        PRIMITIVE_SHORT,
-        PRIMITIVE_INT,
-        PRIMITIVE_LONG,
-        PRIMITIVE_FLOAT,
-        PRIMITIVE_DOUBLE,
-        STRING,
-        /** List with a small number of entries whose amount fit into a byte. */
-        LIST_BYTE,
-        LIST,
-        /** Map with a small number of entries whose amount fit into a byte. */
-        MAP_BYTE,
-        MAP,
-        /** ConfigurationSerializable whose root map has a small number of entries whose amount fit into a byte. */
-        CONFIGURATION_SERIALIZABLE_BYTE,
-        CONFIGURATION_SERIALIZABLE;
+        NULL, PRIMITIVE_BOOLEAN_TRUE, PRIMITIVE_BOOLEAN_FALSE, PRIMITIVE_BYTE, PRIMITIVE_CHARACTER, PRIMITIVE_SHORT, PRIMITIVE_INT, PRIMITIVE_LONG, PRIMITIVE_FLOAT, PRIMITIVE_DOUBLE, STRING,
+        /**
+         * List with a small number of entries whose amount fit into a byte.
+         */
+        LIST_BYTE, LIST,
+        /**
+         * Map with a small number of entries whose amount fit into a byte.
+         */
+        MAP_BYTE, MAP,
+        /**
+         * ConfigurationSerializable whose root map has a small number of entries whose amount fit into a byte.
+         */
+        CONFIGURATION_SERIALIZABLE_BYTE, CONFIGURATION_SERIALIZABLE;
 
         static final SerializedType[] VALUES = values();
     }

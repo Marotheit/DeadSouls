@@ -1,4 +1,4 @@
-package com.darkyen.minecraft;
+package net.sanctuaryhosting.deadSouls;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -10,9 +10,6 @@ import java.nio.ByteOrder;
 import java.nio.channels.Channel;
 import java.nio.channels.SeekableByteChannel;
 
-/**
- *
- */
 final class DataOutputChannel implements DataOutput, Channel {
 
     @NotNull
@@ -40,7 +37,9 @@ final class DataOutputChannel implements DataOutput, Channel {
         }
     }
 
-    /** Truncate to the current position */
+    /**
+     * Truncate to the current position
+     */
     public void truncate() throws IOException {
         flush();
         chn.truncate(chn.position());
@@ -64,7 +63,7 @@ final class DataOutputChannel implements DataOutput, Channel {
     @Override
     public void write(int b) throws IOException {
         require(1);
-        buffer.put((byte)b);
+        buffer.put((byte) b);
     }
 
     @Override
@@ -96,7 +95,7 @@ final class DataOutputChannel implements DataOutput, Channel {
 
     @Override
     public void writeBoolean(boolean v) throws IOException {
-        write(v ? ~0 : 0);
+        write(v ? ~0: 0);
     }
 
     @Override
@@ -107,13 +106,13 @@ final class DataOutputChannel implements DataOutput, Channel {
     @Override
     public void writeShort(int v) throws IOException {
         require(2);
-        buffer.putShort((short)v);
+        buffer.putShort((short) v);
     }
 
     @Override
     public void writeChar(int v) throws IOException {
         require(2);
-        buffer.putChar((char)v);
+        buffer.putChar((char) v);
     }
 
     @Override
@@ -177,39 +176,39 @@ final class DataOutputChannel implements DataOutput, Channel {
         if (this.buffer.capacity() >= 2 + utfLength) {
             // Fast path
             require(2 + utfLength);
-            buffer.putShort((short)utfLength);
+            buffer.putShort((short) utfLength);
 
-            for (int i = 0; i < charLength; i++){
+            for (int i = 0; i < charLength; i++) {
                 char c = str.charAt(i);
                 if ((c >= 0x0001) && (c <= 0x007F)) {
-                    buffer.put((byte)c);
+                    buffer.put((byte) c);
                 } else if (c > 0x07FF) {
-                    buffer.put((byte)(0xE0 | ((c >> 12) & 0x0F)));
-                    buffer.put((byte)(0x80 | ((c >>  6) & 0x3F)));
-                    buffer.put((byte)(0x80 | ((c) & 0x3F)));
+                    buffer.put((byte) (0xE0 | ((c >> 12) & 0x0F)));
+                    buffer.put((byte) (0x80 | ((c >> 6) & 0x3F)));
+                    buffer.put((byte) (0x80 | ((c) & 0x3F)));
                 } else {
-                    buffer.put((byte) (0xC0 | ((c >>  6) & 0x1F)));
+                    buffer.put((byte) (0xC0 | ((c >> 6) & 0x1F)));
                     buffer.put((byte) (0x80 | ((c) & 0x3F)));
                 }
             }
         } else {
             // Slow path
             require(2);
-            buffer.putShort((short)utfLength);
+            buffer.putShort((short) utfLength);
 
-            for (int i = 0; i < charLength; i++){
+            for (int i = 0; i < charLength; i++) {
                 char c = str.charAt(i);
                 if ((c >= 0x0001) && (c <= 0x007F)) {
                     require(1);
-                    buffer.put((byte)c);
+                    buffer.put((byte) c);
                 } else if (c > 0x07FF) {
                     require(3);
-                    buffer.put((byte)(0xE0 | ((c >> 12) & 0x0F)));
-                    buffer.put((byte)(0x80 | ((c >>  6) & 0x3F)));
-                    buffer.put((byte)(0x80 | ((c) & 0x3F)));
+                    buffer.put((byte) (0xE0 | ((c >> 12) & 0x0F)));
+                    buffer.put((byte) (0x80 | ((c >> 6) & 0x3F)));
+                    buffer.put((byte) (0x80 | ((c) & 0x3F)));
                 } else {
                     require(2);
-                    buffer.put((byte) (0xC0 | ((c >>  6) & 0x1F)));
+                    buffer.put((byte) (0xC0 | ((c >> 6) & 0x1F)));
                     buffer.put((byte) (0x80 | ((c) & 0x3F)));
                 }
             }

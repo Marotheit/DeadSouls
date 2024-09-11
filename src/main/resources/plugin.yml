@@ -1,51 +1,51 @@
 name: DeadSouls
-version: '1.7'
-api-version: '1.13'
-main: com.darkyen.minecraft.DeadSouls
-authors: [Darkyen]
+version: '1.21.1'
+main: net.sanctuaryhosting.deadSouls.DeadSoulsPlugin
+description: A simple tombstone system inspired by Dark Souls.
+authors: [Darkyenus, Marotheit]
+api-version: '1.21.1'
 commands:
   souls:
-    description: View and manipulate souls
+    description: Lists applicable player souls.
     usage: /souls
     # Internal sub-commands:
-    # /souls page N     Show more souls
-    # /souls free ID    Free given soul
-    # /souls goto ID    Teleport to given soul
+    # /souls page <number> Shows the provided souls page in the soul list.
+    # /souls release <id> Releases the provided soul.
+    # /souls teleport <id> Teleports the player to the provided soul.
 permissions:
-  com.darkyen.minecraft.deadsouls.hassoul:
-    description: Has soul that holds onto their items.
+  deadsouls.souls.spawn:
+    description: Allows the player to spawn a soul upon death.
     default: true
-  com.darkyen.minecraft.deadsouls.hassoul.xp:
-    description: If the player has a soul, it stores their XP
+  deadsouls.souls.save.items:
+    description: Allows the soul to store the player's items when it is spawned.
     default: true
-  com.darkyen.minecraft.deadsouls.hassoul.items:
-    description: If the player has a soul, it stores their items
+  deadsouls.souls.save.experience:
+    description: Allows the soul to store a portion of the player's experience when it is spawned.
     default: true
-  com.darkyen.minecraft.deadsouls.spectatesouls:
-    description: If the player is in spectator mode, they can see all souls
+  deadsouls.souls.list:
+    description: Lists applicable player souls when using the /souls command.
     default: true
-  com.darkyen.minecraft.deadsouls.coordinates:
-    description: Coordinates of souls are visible in chat output for this player. Not recommended - breaks immersion.
+  deadsouls.souls.release:
+    description: Allows the player to release their soul.
+    default: true
+  deadsouls.souls.spectator:
+    description: Allows the player to see all souls in the world if they are set to the Spectator gamemode.
+    default: true
+  deadsouls.souls.coordinates:
+    description: Displays the location of each applicable soul when using the /souls command. This will also display the location of the soul upon death.
     default: false
-  com.darkyen.minecraft.deadsouls.distance:
-    description: Distance to the soul is visible in chat output for this player. Not recommended - breaks immersion.
+  deadsouls.souls.distance:
+    description: Displays the distance from each applicable soul when using the /souls command.
     default: false
-  com.darkyen.minecraft.deadsouls.souls:
-    description: List souls with /souls command
-    default: true
-  com.darkyen.minecraft.deadsouls.souls.all:
-    description: /souls displays all souls, even those that are not yours
+  deadsouls.souls.teleport:
+    description: Allows the player to teleport to their soul.
+    default: false
+  deadsouls.souls.list.all:
+    description: Lists all player souls when using the /souls command, even those that do not belong to them.
     default: op
-  com.darkyen.minecraft.deadsouls.souls.free:
-    description: Free to your souls through /souls command and through quick link
-    default: true
-  com.darkyen.minecraft.deadsouls.souls.free.all:
-    description: Free anyone's soul through /souls command
+  deadsouls.souls.release.all:
+    description: Allows the player to release any soul when using the /souls command, even those that do not belong to them.
     default: op
-  com.darkyen.minecraft.deadsouls.souls.goto:
-    description: Teleport to your souls through /souls command
+  deadsouls.souls.teleport.all:
+    description: Allows the player to teleport to any soul when using the `/souls` command, even those that do not belong to them.
     default: op
-  com.darkyen.minecraft.deadsouls.souls.goto.all:
-    description: Teleport to any soul through /souls command
-    default: op
-softdepend: [ItemSoulBind]
