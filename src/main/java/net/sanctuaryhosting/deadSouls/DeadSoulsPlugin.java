@@ -862,6 +862,7 @@ public final class DeadSoulsPlugin extends JavaPlugin implements Listener, DeadS
                 soulSpawnMessage = soulSpawnMessage.append(soulListCoordinatesStyleMessage);
             }
 
+            soulSpawnMessage = soulSpawnMessage.append(Component.newline());
             player.sendMessage(soulSpawnMessage);
         }
 

@@ -133,7 +133,7 @@ language-actionbar-soul-does-not-exist: "<red>That soul does not exist."
 language-actionbar-soul-unable-to-locate: "<red>That soul was unable to be located."
 
 # The message displayed when the player dies to inform them that their soul has spawned, saving their items and experience.
-language-soul-spawned: "<newline><yellow>The world has suspended your soul, allowing your items and experience to linger in the overworld.<newline>"
+language-soul-spawned: "<newline><yellow>The world has suspended your soul, allowing your items and experience to linger in the world.<newline>"
 
 # The message displayed after the soul spawned message when the player dies to inform them of the location of their soul.
 # The player must have the `deadsouls.souls.list.coordinates` permission to see this information.
@@ -141,14 +141,14 @@ language-soul-spawned: "<newline><yellow>The world has suspended your soul, allo
 language-soul-spawned-coordinates: "<newline><newline><gray>☠ <yellow>Your soul can be located at <gray>X: <soul-x-coordinate> <yellow>/ <gray>Y: <soul-y-coordinate> <yellow>/ <gray>Z: <soul-z-coordinate><yellow>. <gray>☠<newline> "
 
 # The message displayed in the actionbar when a soul is depleted.
-language-actionbar-soul-claimed: "<yellow>You have regained your items and experience from the soul."
+language-actionbar-soul-claimed: "<yellow>You have regained the items and experience from this soul."
 
 # The message displayed in the actionbar when the player attempts to view the `/souls` list while having no souls.
 language-actionbar-soul-list-no-souls: "<yellow>You do not have any souls to claim."
 
 # The style applied to the header at the top of the `/souls` list.
 # <player-name> is used as a placeholder for the name of the player.
-language-soul-list-header: "<reset> <newline><yellow><-=-x----      <gray>☠ <gold><player-name>'s Souls <gray>☠      <yellow>----x-=-><newline><reset> "
+language-soul-list-header: "<reset><newline><yellow>  <strikethrough>                </strikethrough>  <gray>☠ <underlined><gold><player-name>'s Souls</underlined> <gray>☠<yellow>  <strikethrough>                </strikethrough><newline><reset>"
 
 # The style of each numbered soul list in the `/souls` list.
 # <soul-number> is used as a placeholder for the number of the soul in the list.
