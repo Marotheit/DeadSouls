@@ -1,4 +1,6 @@
 # DeadSouls
+![License](https://img.shields.io/github/license/Marotheit/DeadSouls)
+![GitHub Latest Release](https://img.shields.io/github/v/release/Marotheit/DeadSouls)
 ### A simple tombstone system inspired by Dark Souls.
 This project would not be possible without [Darkyenus](https://github.com/Darkyenus/DeadSouls). He did all the heavy lifting, I have simply updated the plugin for my personal needs.
 <br /><br />
