@@ -1,9 +1,9 @@
 name: DeadSouls
-version: '1.21.4'
+version: '1.21.5'
 main: net.sanctuaryhosting.deadSouls.DeadSoulsPlugin
 description: A simple tombstone system inspired by Dark Souls.
 authors: [Darkyenus, Marotheit]
-api-version: '1.21.4'
+api-version: '1.21.5'
 commands:
   souls:
     description: Lists applicable player souls.
